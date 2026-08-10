@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giriş - Parça Takip Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a1f;
+    --bg-secondary: #212127;
+    --card: #26262e;
+    --border: #35353f;
+    --text: #eeeef0;
+    --muted: #8b8b96;
+    --accent: #f97316;
+    --accent-hover: #ea6a0a;
+    --accent-soft: #3d2814;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --steel: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(249, 115, 22, 0.07) 0%, transparent 42%),
+      radial-gradient(circle at 100% 110%, rgba(255, 255, 255, 0.03) 0%, transparent 35%),
+      linear-gradient(180deg, rgba(26,26,31,0.78) 0%, rgba(26,26,31,0.72) 45%, rgba(26,26,31,0.85) 100%),
+      url('assets/hero-bg.jpg');
+    background-size: auto, auto, auto, cover;
+    background-position: 0% 0%, 0% 0%, 0% 0%, center center;
+    background-repeat: repeat, repeat, repeat, no-repeat;
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+
+  .container { width: 100%; max-width: 380px; }
+  .kicker {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    text-align: center;
+  }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; text-align: center; }
+
+  .login-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 24px;
+  }
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+  label:first-of-type { margin-top: 0; }
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  input[type="text"]:focus, input[type="password"]:focus { border-color: var(--accent); }
+  button {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    margin-top: 22px;
+    transition: background 0.15s ease;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.55; cursor: default; }
+
+  .status { font-size: 13px; margin-top: 14px; color: var(--muted); text-align: center; min-height: 16px; }
+  .status.error { color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="kicker">Oto Servis • Atölye Sistemi</div>
+  <h1>🔧 Parça Takip Sistemi</h1>
+  <div class="subtitle">Dükkanınıza giriş yapın</div>
+
+  <div class="login-box">
+    <form id="loginForm">
+      <label for="kullaniciAdi">Kullanıcı Adı</label>
+      <input type="text" id="kullaniciAdi" autocomplete="username" autofocus required>
+
+      <label for="sifre">Şifre</label>
+      <input type="password" id="sifre" autocomplete="current-password" required>
+
+      <button type="submit" id="loginBtn">Giriş Yap</button>
+      <div class="status" id="status"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('loginForm');
+  const statusEl = document.getElementById('status');
+  const loginBtn = document.getElementById('loginBtn');
+
+  // Zaten girişliyse doğrudan ana sayfaya geç
+  if (localStorage.getItem('token')) {
+    window.location.href = 'index.html';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const kullaniciAdi = document.getElementById('kullaniciAdi').value.trim();
+    const sifre = document.getElementById('sifre').value;
+
+    if (!kullaniciAdi || !sifre) return;
+
+    loginBtn.disabled = true;
+    statusEl.textContent = 'Giriş yapılıyor...';
+    statusEl.className = 'status';
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kullaniciAdi, sifre }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        statusEl.textContent = data.error || 'Giriş başarısız.';
+        statusEl.className = 'status error';
+        loginBtn.disabled = false;
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('dukkanAdi', data.dukkanAdi);
+      window.location.href = 'index.html';
+    } catch (err) {
+      statusEl.textContent = 'Sunucuya bağlanılamadı.';
+      statusEl.className = 'status error';
+      loginBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

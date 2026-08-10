@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parçaları Yönet - Parça Takip Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a1f;
+    --bg-secondary: #212127;
+    --card: #26262e;
+    --border: #35353f;
+    --text: #eeeef0;
+    --muted: #8b8b96;
+    --accent: #f97316;
+    --accent-hover: #ea6a0a;
+    --accent-soft: #3d2814;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --steel: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 12% -10%, rgba(249, 115, 22, 0.06) 0%, transparent 40%),
+      radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 35%),
+      linear-gradient(180deg, rgba(26,26,31,0.78) 0%, rgba(26,26,31,0.72) 45%, rgba(26,26,31,0.85) 100%),
+      url('assets/hero-bg.jpg');
+    background-size: auto, auto, auto, cover;
+    background-position: 0% 0%, 0% 0%, 0% 0%, center center;
+    background-repeat: repeat, repeat, repeat, no-repeat;
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+  .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+
+  .container { max-width: 720px; margin: 0 auto; }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 8px;
+  }
+  .topbar .dukkan-adi { font-size: 13px; color: var(--muted); }
+  .topbar .dukkan-adi strong { color: var(--text); }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .link-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.15s ease;
+  }
+  .link-btn:hover { border-color: var(--accent); }
+  .logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.55; cursor: default; }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  button.secondary:hover { background: transparent; border-color: var(--accent); }
+  button.danger {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--danger);
+  }
+  button.danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+  button.small { padding: 8px 12px; font-size: 13px; }
+
+  .status { font-size: 13px; margin: 10px 0; color: var(--muted); }
+  .status.error { color: var(--danger); }
+  .status.success { color: var(--success); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  th {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  tbody tr { transition: background 0.1s ease; }
+  tbody tr:hover { background: rgba(249, 115, 22, 0.04); }
+  tr:last-child td { border-bottom: none; }
+  td.kod { color: var(--accent); font-weight: 700; letter-spacing: 0.03em; }
+  td.stok.low { color: var(--danger); font-weight: 700; }
+  td.stok.ok { color: var(--success); font-weight: 700; }
+  td.actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .empty { color: var(--muted); font-size: 13px; padding: 16px 0; text-align: center; }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+    overflow-y: auto;
+    z-index: 10;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px;
+    width: 100%;
+    max-width: 520px;
+  }
+  .modal h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 16px; }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .field input[type="text"], .field input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .suggestion-box {
+    display: none;
+    margin-top: 8px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #fdba74;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .suggestion-box.open { display: flex; }
+  .suggestion-box button { flex-shrink: 0; }
+
+  .sub-section { margin-top: 6px; }
+  .sub-section h3 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dyn-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .dyn-row input { flex: 1; }
+  .dyn-row button.small { flex-shrink: 0; }
+  .add-row-btn { margin-top: 4px; }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions button { flex: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="dukkan-adi"><strong id="dukkanAdi"></strong></div>
+    <div class="topbar-actions">
+      <a class="link-btn" href="index.html">← Kod Arama</a>
+      <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
+    </div>
+  </div>
+
+  <div class="header-row">
+    <div>
+      <div class="kicker">Oto Servis • Atölye Sistemi</div>
+      <h1>Parçaları Yönet</h1>
+      <div class="subtitle">Ekle, düzenle veya sil</div>
+    </div>
+    <button onclick="openForm()">+ Yeni Parça Ekle</button>
+  </div>
+
+  <div class="status" id="listStatus"></div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Kod</th>
+          <th>İsim</th>
+          <th>Çekmece</th>
+          <th>Stok</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="partsBody"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" style="display:none;">Henüz parça eklenmemiş.</div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Yeni Parça Ekle</h2>
+    <form id="partForm">
+      <input type="hidden" id="orijinalKod">
+      <div class="field">
+        <label for="fKod">Kod *</label>
+        <input type="text" id="fKod" class="mono" required autocomplete="off">
+        <div class="suggestion-box" id="suggestionBox">
+          <span>💡 <span id="suggestionText"></span></span>
+          <button type="button" class="secondary small" id="useSuggestionBtn">Bu çekmeceyi kullan</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="fIsim">İsim *</label>
+        <input type="text" id="fIsim" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fCekmece">Çekmece *</label>
+          <input type="text" id="fCekmece" required>
+        </div>
+        <div class="field">
+          <label for="fStok">Stok Adedi *</label>
+          <input type="number" id="fStok" min="0" required>
+        </div>
+      </div>
+
+      <div class="sub-section">
+        <h3>Alt Kodlar</h3>
+        <div id="altKodlarList"></div>
+        <button type="button" class="secondary small add-row-btn" onclick="addAltKodRow()">+ Alt Kod Ekle</button>
+      </div>
+
+      <div class="sub-section" style="margin-top:16px;">
+        <h3>Takıldığı Araçlar</h3>
+        <div id="araclarList"></div>
+        <button type="button" class="secondary small add-row-btn" onclick="addAracRow()">+ Araç Ekle</button>
+      </div>
+
+      <div class="status" id="formStatus"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary" onclick="closeForm()">Vazgeç</button>
+        <button type="submit" id="saveBtn">Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = 'login.html';
+  }
+  document.getElementById('dukkanAdi').textContent = localStorage.getItem('dukkanAdi') || '';
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('dukkanAdi');
+    window.location.href = 'login.html';
+  }
+
+  function authHeaders(extra) {
+    return Object.assign({ Authorization: `Bearer ${localStorage.getItem('token')}` }, extra || {});
+  }
+
+  const listStatusEl = document.getElementById('listStatus');
+  const partsBody = document.getElementById('partsBody');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  const overlay = document.getElementById('overlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const partForm = document.getElementById('partForm');
+  const formStatus = document.getElementById('formStatus');
+  const altKodlarList = document.getElementById('altKodlarList');
+  const araclarList = document.getElementById('araclarList');
+
+  let editingKod = null; // null = yeni parça, string = düzenlenen parçanın orijinal kodu
+  let allParts = []; // GET /api/parts sonucunun önbelleği (kod önerisi için)
+
+  async function loadParts() {
+    listStatusEl.textContent = 'Yükleniyor...';
+    listStatusEl.className = 'status';
+    try {
+      const res = await fetch('/api/parts', { headers: authHeaders() });
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        listStatusEl.textContent = data.error || 'Liste alınamadı.';
+        listStatusEl.className = 'status error';
+        return;
+      }
+      allParts = data;
+      renderList(data);
+      listStatusEl.textContent = '';
+    } catch (err) {
+      listStatusEl.textContent = 'Sunucuya bağlanılamadı.';
+      listStatusEl.className = 'status error';
+    }
+  }
+
+  function renderList(parts) {
+    if (parts.length === 0) {
+      partsBody.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+    partsBody.innerHTML = parts.map(p => `
+      <tr>
+        <td class="kod mono">${escapeHtml(p.kod)}</td>
+        <td>${escapeHtml(p.isim)}</td>
+        <td>${escapeHtml(p.cekmece)}</td>
+        <td class="stok ${p.stok_adedi <= 5 ? 'low' : 'ok'}">${p.stok_adedi}</td>
+        <td class="actions">
+          <button class="secondary small" onclick="editPart('${escapeAttr(p.kod)}')">Düzenle</button>
+          <button class="danger small" onclick="deletePart('${escapeAttr(p.kod)}')">Sil</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+  function escapeAttr(str) {
+    return String(str).replace(/'/g, "\\'");
+  }
+
+  // --- Dinamik alt kod / araç satırları ---
+  function addAltKodRow(altKod = '', aciklama = '') {
+    const row = document.createElement('div');
+    row.className = 'dyn-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Alt kod (örn. FB-1001-L)" class="alt-kod-input mono" value="${escapeHtml(altKod)}">
+      <input type="text" placeholder="Açıklama" class="alt-aciklama-input" value="${escapeHtml(aciklama)}">
+      <button type="button" class="secondary small" onclick="this.parentElement.remove()">Sil</button>
+    `;
+    altKodlarList.appendChild(row);
+  }
+
+  function addAracRow(plaka = '', tarih = '', km = '') {
+    const row = document.createElement('div');
+    row.className = 'dyn-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Plaka" class="arac-plaka-input mono" value="${escapeHtml(plaka)}">
+      <input type="text" placeholder="Tarih (YYYY-AA-GG)" class="arac-tarih-input" value="${escapeHtml(tarih)}">
+      <input type="number" placeholder="KM" class="arac-km-input" value="${km !== null && km !== undefined ? km : ''}">
+      <button type="button" class="secondary small" onclick="this.parentElement.remove()">Sil</button>
+    `;
+    araclarList.appendChild(row);
+  }
+
+  function collectAltKodlar() {
+    return Array.from(altKodlarList.querySelectorAll('.dyn-row')).map(row => ({
+      alt_kod: row.querySelector('.alt-kod-input').value.trim(),
+      aciklama: row.querySelector('.alt-aciklama-input').value.trim(),
+    })).filter(a => a.alt_kod);
+  }
+
+  function collectAraclar() {
+    return Array.from(araclarList.querySelectorAll('.dyn-row')).map(row => {
+      const kmVal = row.querySelector('.arac-km-input').value;
+      return {
+        plaka: row.querySelector('.arac-plaka-input').value.trim(),
+        tarih: row.querySelector('.arac-tarih-input').value.trim(),
+        km: kmVal === '' ? null : Number(kmVal),
+      };
+    }).filter(a => a.plaka);
+  }
+
+  // --- Kod önekine göre çekmece önerisi (sadece yeni parça eklerken) ---
+  const fKodInput = document.getElementById('fKod');
+  const fCekmeceInput = document.getElementById('fCekmece');
+  const suggestionBox = document.getElementById('suggestionBox');
+  const suggestionText = document.getElementById('suggestionText');
+  const useSuggestionBtn = document.getElementById('useSuggestionBtn');
+  let suggestedCekmece = null;
+  let suggestDebounceTimer = null;
+
+  function extractPrefix(kod) {
+    const m = String(kod || '').match(/^[A-Za-zÇĞİÖŞÜçğıöşü]+/);
+    return m ? m[0].toUpperCase() : '';
+  }
+
+  function hideSuggestion() {
+    suggestionBox.classList.remove('open');
+    suggestedCekmece = null;
+  }
+
+  function updateKodSuggestion() {
+    if (editingKod !== null) {
+      hideSuggestion();
+      return;
+    }
+
+    const kod = fKodInput.value.trim();
+    const prefix = extractPrefix(kod);
+    if (!prefix) {
+      hideSuggestion();
+      return;
+    }
+
+    const matches = allParts.filter(
+      (p) => extractPrefix(p.kod) === prefix && p.kod.toLowerCase() !== kod.toLowerCase()
+    );
+    if (matches.length === 0) {
+      hideSuggestion();
+      return;
+    }
+
+    // En sık kullanılan çekmeceyi bul; eşitlik durumunda listede en sonda olanı (en son eklenen) tercih et
+    const counts = new Map();
+    const lastIndex = new Map();
+    matches.forEach((p, i) => {
+      counts.set(p.cekmece, (counts.get(p.cekmece) || 0) + 1);
+      lastIndex.set(p.cekmece, i);
+    });
+
+    let bestCekmece = null;
+    let bestCount = -1;
+    let bestIndex = -1;
+    counts.forEach((count, cekmece) => {
+      const idx = lastIndex.get(cekmece);
+      if (count > bestCount || (count === bestCount && idx > bestIndex)) {
+        bestCekmece = cekmece;
+        bestCount = count;
+        bestIndex = idx;
+      }
+    });
+
+    const ornekParca = [...matches].reverse().find((p) => p.cekmece === bestCekmece);
+
+    suggestedCekmece = bestCekmece;
+    suggestionText.innerHTML =
+      `Benzer kodlar (<span class="mono">${escapeHtml(ornekParca.kod)}</span>) ` +
+      `"${escapeHtml(bestCekmece)}" konumunda.`;
+    suggestionBox.classList.add('open');
+  }
+
+  fKodInput.addEventListener('input', () => {
+    clearTimeout(suggestDebounceTimer);
+    suggestDebounceTimer = setTimeout(updateKodSuggestion, 300);
+  });
+
+  useSuggestionBtn.addEventListener('click', () => {
+    if (suggestedCekmece) {
+      fCekmeceInput.value = suggestedCekmece;
+    }
+  });
+
+  // --- Form aç/kapa ---
+  function openForm() {
+    editingKod = null;
+    modalTitle.textContent = 'Yeni Parça Ekle';
+    partForm.reset();
+    document.getElementById('orijinalKod').value = '';
+    document.getElementById('fKod').disabled = false;
+    altKodlarList.innerHTML = '';
+    araclarList.innerHTML = '';
+    formStatus.textContent = '';
+    formStatus.className = 'status';
+    hideSuggestion();
+    overlay.classList.add('open');
+  }
+
+  function closeForm() {
+    overlay.classList.remove('open');
+  }
+
+  async function editPart(kod) {
+    listStatusEl.textContent = '';
+    try {
+      const res = await fetch(`/api/lookup/${encodeURIComponent(kod)}`, { headers: authHeaders() });
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        listStatusEl.textContent = data.error || 'Parça alınamadı.';
+        listStatusEl.className = 'status error';
+        return;
+      }
+
+      editingKod = data.kod;
+      modalTitle.textContent = 'Parçayı Düzenle';
+      document.getElementById('orijinalKod').value = data.kod;
+      document.getElementById('fKod').value = data.kod;
+      document.getElementById('fIsim').value = data.isim;
+      document.getElementById('fCekmece').value = data.cekmece;
+      document.getElementById('fStok').value = data.stok_adedi;
+
+      altKodlarList.innerHTML = '';
+      (data.alt_kodlar || []).forEach(a => addAltKodRow(a.alt_kod, a.aciklama));
+
+      araclarList.innerHTML = '';
+      (data.takildigi_araclar || []).forEach(a => addAracRow(a.plaka, a.tarih, a.km));
+
+      formStatus.textContent = '';
+      formStatus.className = 'status';
+      hideSuggestion();
+      overlay.classList.add('open');
+    } catch (err) {
+      listStatusEl.textContent = 'Sunucuya bağlanılamadı.';
+      listStatusEl.className = 'status error';
+    }
+  }
+
+  async function deletePart(kod) {
+    if (!confirm(`"${kod}" kodlu parçayı silmek istediğinize emin misiniz?`)) return;
+
+    try {
+      const res = await fetch(`/api/parts/${encodeURIComponent(kod)}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        listStatusEl.textContent = data.error || 'Silinemedi.';
+        listStatusEl.className = 'status error';
+        return;
+      }
+      listStatusEl.textContent = 'Parça silindi.';
+      listStatusEl.className = 'status success';
+      loadParts();
+    } catch (err) {
+      listStatusEl.textContent = 'Sunucuya bağlanılamadı.';
+      listStatusEl.className = 'status error';
+    }
+  }
+
+  partForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const body = {
+      kod: document.getElementById('fKod').value.trim(),
+      isim: document.getElementById('fIsim').value.trim(),
+      cekmece: document.getElementById('fCekmece').value.trim(),
+      stok_adedi: Number(document.getElementById('fStok').value),
+      alt_kodlar: collectAltKodlar(),
+      takildigi_araclar: collectAraclar(),
+    };
+
+    if (!body.kod || !body.isim || !body.cekmece || Number.isNaN(body.stok_adedi)) {
+      formStatus.textContent = 'Kod, isim, çekmece ve stok adedi zorunludur.';
+      formStatus.className = 'status error';
+      return;
+    }
+
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    formStatus.textContent = 'Kaydediliyor...';
+    formStatus.className = 'status';
+
+    try {
+      const url = editingKod ? `/api/parts/${encodeURIComponent(editingKod)}` : '/api/parts';
+      const method = editingKod ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(body),
+      });
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        formStatus.textContent = data.error || 'Kaydedilemedi.';
+        formStatus.className = 'status error';
+        saveBtn.disabled = false;
+        return;
+      }
+
+      closeForm();
+      listStatusEl.textContent = editingKod ? 'Parça güncellendi.' : 'Parça eklendi.';
+      listStatusEl.className = 'status success';
+      loadParts();
+    } catch (err) {
+      formStatus.textContent = 'Sunucuya bağlanılamadı.';
+      formStatus.className = 'status error';
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  loadParts();
+</script>
+</body>
+</html>

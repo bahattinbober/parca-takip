@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parça Takip Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a1f;
+    --bg-secondary: #212127;
+    --card: #26262e;
+    --border: #35353f;
+    --text: #eeeef0;
+    --muted: #8b8b96;
+    --accent: #f97316;
+    --accent-hover: #ea6a0a;
+    --accent-soft: #3d2814;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --steel: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 12% -10%, rgba(249, 115, 22, 0.06) 0%, transparent 40%),
+      radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 35%),
+      linear-gradient(180deg, rgba(26,26,31,0.78) 0%, rgba(26,26,31,0.72) 45%, rgba(26,26,31,0.85) 100%),
+      url('assets/hero-bg.jpg');
+    background-size: auto, auto, auto, cover;
+    background-position: 0% 0%, 0% 0%, 0% 0%, center center;
+    background-repeat: repeat, repeat, repeat, no-repeat;
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+  .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+
+  .container { max-width: 640px; margin: 0 auto; }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .topbar .dukkan-adi { font-size: 13px; color: var(--muted); }
+  .topbar .dukkan-adi strong { color: var(--text); }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .link-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.15s ease;
+  }
+  .link-btn:hover { border-color: var(--accent); }
+  .logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  .scan-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .input-row { display: flex; gap: 8px; }
+  .scan-wrap {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  .scan-wrap input[type="text"] { width: 100%; }
+  input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  .scan-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    left: -8%;
+    background: var(--accent);
+    box-shadow: 0 0 8px 2px rgba(249, 115, 22, 0.85), 0 0 22px 8px rgba(249, 115, 22, 0.4);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .scan-line.active { animation: scanSweep 450ms ease-in-out; }
+  @keyframes scanSweep {
+    0% { left: -8%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { left: 106%; opacity: 0; }
+  }
+
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button:hover { background: var(--accent-hover); }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-top: 10px;
+    width: 100%;
+  }
+  button.secondary:hover { background: transparent; border-color: var(--accent); }
+
+  #reader { margin-top: 14px; border-radius: 8px; overflow: hidden; display: none; }
+
+  .status { font-size: 13px; margin-top: 10px; color: var(--muted); }
+  .status.error { color: var(--danger); }
+
+  .result { display: none; }
+  .result.visible { display: block; animation: resultFadeIn 320ms ease; }
+  @keyframes resultFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .part-header {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .part-header .kod { color: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; }
+  .part-header .isim { font-size: 20px; font-weight: 700; margin: 8px 0 0; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .stat-card .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stat-card .value { font-size: 18px; font-weight: 700; }
+  .stat-card .value.low { color: var(--danger); }
+  .stat-card .value.ok { color: var(--success); }
+
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .section h3 {
+    font-size: 11px;
+    font-weight: 700;
+    margin: 0 0 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .row-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .row-item:last-child { border-bottom: none; }
+  .row-item .main { font-weight: 600; }
+  .row-item .sub { color: var(--muted); font-size: 12px; }
+  .plaka-badge {
+    background: var(--accent-soft);
+    color: #fdba74;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="dukkan-adi"><strong id="dukkanAdi"></strong></div>
+    <div class="topbar-actions">
+      <a class="link-btn" href="manage.html">Parçaları Yönet</a>
+      <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
+    </div>
+  </div>
+  <div class="kicker">Oto Servis • Atölye Sistemi</div>
+  <h1>🔧 Parça Takip Sistemi</h1>
+  <div class="subtitle">Kutunun üzerindeki kodu okutun ya da girin</div>
+
+  <div class="scan-box">
+    <div class="input-row">
+      <div class="scan-wrap">
+        <input type="text" id="kodInput" class="mono" placeholder="Parça kodu (örn. FB-1001)" autofocus>
+        <div class="scan-line" id="scanLine"></div>
+      </div>
+      <button onclick="lookup()">Ara</button>
+    </div>
+    <button class="secondary" onclick="toggleCamera()">📷 Kamera ile QR / Barkod Okut</button>
+    <div id="reader"></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="part-header">
+      <div class="kod mono" id="rKod"></div>
+      <div class="isim" id="rIsim"></div>
+    </div>
+
+    <div class="grid">
+      <div class="stat-card">
+        <div class="label">📍 Çekmece Konumu</div>
+        <div class="value" id="rCekmece"></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">📦 Stok Adedi</div>
+        <div class="value" id="rStok"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Alt Kodlar</h3>
+      <div id="rAltKodlar"></div>
+    </div>
+
+    <div class="section">
+      <h3>Bu Parçanın Takıldığı Araçlar</h3>
+      <div id="rAraclar"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = 'login.html';
+  }
+  document.getElementById('dukkanAdi').textContent = localStorage.getItem('dukkanAdi') || '';
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('dukkanAdi');
+    window.location.href = 'login.html';
+  }
+
+  const input = document.getElementById('kodInput');
+  const statusEl = document.getElementById('status');
+  const resultEl = document.getElementById('result');
+  const scanLine = document.getElementById('scanLine');
+  let html5QrCode = null;
+  let cameraOn = false;
+
+  input.addEventListener('keydown', (e) => {
+    // Fiziksel barkod okuyucular genelde Enter ile biter
+    if (e.key === 'Enter') lookup();
+  });
+
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function triggerScanAnimation() {
+    // Class'ı kaldırıp yeniden eklemeden önce reflow tetikleyerek animasyonu her seferinde baştan başlat
+    scanLine.classList.remove('active');
+    void scanLine.offsetWidth;
+    scanLine.classList.add('active');
+  }
+
+  async function lookup() {
+    const kod = input.value.trim();
+    if (!kod) return;
+    statusEl.textContent = 'Aranıyor...';
+    statusEl.className = 'status';
+    resultEl.classList.remove('visible');
+
+    triggerScanAnimation();
+
+    try {
+      const [res] = await Promise.all([
+        fetch(`/api/lookup/${encodeURIComponent(kod)}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }),
+        wait(450),
+      ]);
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        statusEl.textContent = data.error || 'Parça bulunamadı.';
+        statusEl.className = 'status error';
+        return;
+      }
+
+      renderResult(data);
+      statusEl.textContent = '';
+    } catch (err) {
+      statusEl.textContent = 'Sunucuya bağlanılamadı.';
+      statusEl.className = 'status error';
+    }
+  }
+
+  function renderResult(data) {
+    document.getElementById('rKod').textContent = data.kod;
+    document.getElementById('rIsim').textContent = data.isim;
+    document.getElementById('rCekmece').textContent = data.cekmece;
+
+    const stokEl = document.getElementById('rStok');
+    stokEl.textContent = data.stok_adedi + ' adet';
+    stokEl.className = 'value ' + (data.stok_adedi <= 5 ? 'low' : 'ok');
+
+    const altEl = document.getElementById('rAltKodlar');
+    if (data.alt_kodlar.length === 0) {
+      altEl.innerHTML = '<div class="empty">Alt kod bulunmuyor.</div>';
+    } else {
+      altEl.innerHTML = data.alt_kodlar.map(s => `
+        <div class="row-item">
+          <div>
+            <div class="main mono">${s.alt_kod}</div>
+            <div class="sub">${s.aciklama || ''}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const aracEl = document.getElementById('rAraclar');
+    if (data.takildigi_araclar.length === 0) {
+      aracEl.innerHTML = '<div class="empty">Henüz herhangi bir araca takılmamış.</div>';
+    } else {
+      aracEl.innerHTML = data.takildigi_araclar.map(a => `
+        <div class="row-item">
+          <span class="plaka-badge mono">${a.plaka}</span>
+          <div class="sub">${a.tarih}${a.km ? ' • ' + a.km.toLocaleString('tr-TR') + ' km' : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    resultEl.classList.add('visible');
+  }
+
+  function toggleCamera() {
+    const readerEl = document.getElementById('reader');
+    if (!cameraOn) {
+      readerEl.style.display = 'block';
+      html5QrCode = new Html5Qrcode('reader');
+      html5QrCode.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: 220 },
+        (decodedText) => {
+          input.value = decodedText;
+          lookup();
+          toggleCamera(); // okuyunca kamerayı kapat
+        },
+        () => {}
+      ).catch(() => {
+        statusEl.textContent = 'Kameraya erişilemedi. Tarayıcı izinlerini kontrol edin.';
+        statusEl.className = 'status error';
+        readerEl.style.display = 'none';
+      });
+      cameraOn = true;
+    } else {
+      if (html5QrCode) html5QrCode.stop().then(() => html5QrCode.clear());
+      readerEl.style.display = 'none';
+      cameraOn = false;
+    }
+  }
+</script>
+</body>
+</html>

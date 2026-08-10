@@ -1,0 +1,8 @@
+node_modules/
+.env
+
+# Gerçek dükkan hesapları (şifre hash'leri) ve dükkanlara özel parça verileri.
+# Bunlar sadece bu sunucuda kalmalı - GitHub'a asla gitmemeli.
+data/tenants.json
+data/tenants/*
+!data/tenants/.gitkeep
